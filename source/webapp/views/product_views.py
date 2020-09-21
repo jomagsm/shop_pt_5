@@ -1,7 +1,7 @@
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.views.generic import DetailView, CreateView, UpdateView, DeleteView
 from django.urls import reverse, reverse_lazy
-
+from django.contrib import messages
 from .base_views import SearchView
 
 from webapp.models import Product
@@ -15,6 +15,7 @@ class IndexView(SearchView):
     search_fields = ['name__icontains']
     paginate_by = 5
     context_object_name = 'products'
+
 
     def get_queryset(self):
         return super().get_queryset().filter(amount__gt=0)

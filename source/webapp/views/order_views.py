@@ -6,6 +6,7 @@ from django.views.generic import ListView, CreateView, DeleteView
 
 from webapp.forms import CartAddForm, OrderForm
 from webapp.models import Cart, Product, Order, OrderProduct
+from django.contrib import messages
 
 
 class CartView(ListView):
@@ -49,14 +50,22 @@ class CartAddView(CreateView):
             cart_product.qty += qty
             if cart_product.qty <= self.product.amount:
                 cart_product.save()
+                messages.add_message(self.request, messages.SUCCESS, 'Добавили в корзину: '+
+                                     cart_product.product.name + ' ' + str(qty))
+            else:
+                messages.add_message(self.request, messages.ERROR, 'Не достаточно количества')
         except Cart.DoesNotExist:
             if qty <= self.product.amount:
                 cart_product = Cart.objects.create(product=self.product, qty=qty)
                 self.save_to_session(cart_product)
-
+                messages.add_message(self.request, messages.SUCCESS, 'Добавили в корзину: '+
+                                     cart_product.product.name + ' ' + str(qty))
+            else:
+                messages.add_message(self.request, messages.ERROR, 'Не достаточно количества')
         return redirect(self.get_success_url())
 
     def form_invalid(self, form):
+        messages.add_message(self.request, messages.ERROR, 'Ошибка не достаточно!')
         return redirect(self.get_success_url())
 
     def get_success_url(self):
@@ -84,6 +93,8 @@ class CartDeleteView(DeleteView):
         self.object = self.get_object()
         success_url = self.get_success_url()
         self.delete_from_session()
+        messages.add_message(self.request, messages.WARNING, 'Удаленно ' +
+                             self.object.product.name + ' ' + str(self.object.qty)+' штук')
         self.object.delete()
         return redirect(success_url)
 
@@ -109,7 +120,8 @@ class CartDeleteOneView(CartDeleteView):
             self.object.delete()
         else:
             self.object.save()
-
+        messages.add_message(self.request, messages.WARNING, 'Удаленно ' +
+                             self.object.product.name +' '+'1 кол')
         return redirect(success_url)
 
 
