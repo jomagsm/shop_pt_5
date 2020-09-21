@@ -3,8 +3,12 @@
 {% block title %}View{% endblock %}
 
 {% block menu %}
+    {% if perms.webapp.change_product %}
     <li><a href="{% url 'webapp:product_update' product.pk %}">Update</a></li>
+    {% endif %}
+    {% if perms.webapp.delete_product %}
     <li><a href="{% url 'webapp:product_delete' product.pk %}">Delete</a></li>
+    {% endif %}
     <li>{% include 'partial/cart_add_form.html' %}</li>
 {% endblock %}
 

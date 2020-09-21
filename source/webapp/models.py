@@ -1,3 +1,5 @@
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import MinValueValidator
 from django.db.models import Sum, F, ExpressionWrapper as E
@@ -73,6 +75,8 @@ class Cart(models.Model):
 
 
 class Order(models.Model):
+    user = models.ForeignKey(get_user_model(), null=True, blank=True, on_delete=models.CASCADE,
+                             related_name='user_order', verbose_name='Пользователь')
     name = models.CharField(max_length=50, verbose_name='Имя')
     phone = models.CharField(max_length=30, verbose_name='Телефон')
     address = models.CharField(max_length=100, verbose_name='Адрес')
@@ -85,6 +89,13 @@ class Order(models.Model):
 
     def format_time(self):
         return self.created_at.strftime('%Y-%m-%d %H:%M:%S')
+
+    def get_order_total(self):
+        total = 0
+        order_products = OrderProduct.objects.filter(order=self.pk)
+        for i in order_products:
+            total += i.qty * i.product.price
+        return total
 
     class Meta:
         verbose_name = 'Заказ'
@@ -101,6 +112,10 @@ class OrderProduct(models.Model):
     def __str__(self):
         return f'{self.product.name} - {self.order.name} - {self.order.format_time()}'
 
+    def total(self):
+        return self.qty * self.product.price
+
     class Meta:
         verbose_name = 'Товар в заказе'
         verbose_name_plural = 'Товары в заказе'
+

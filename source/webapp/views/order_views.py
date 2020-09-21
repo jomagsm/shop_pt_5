@@ -1,3 +1,5 @@
+from django.contrib.auth import get_user_model
+from django.contrib.auth.mixins import UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
 from django.views.generic import ListView, CreateView, DeleteView
@@ -135,6 +137,9 @@ class OrderCreateView(CreateView):
     def form_valid(self, form):
         response = super().form_valid(form)
         order = self.object
+        if self.request.user.is_authenticated:
+            order.user = self.request.user
+            order.save()
         # оптимально:
         # цикл сам ничего не создаёт, не обновляет, не удаляет
         # цикл работает только с объектами в памяти
@@ -159,3 +164,25 @@ class OrderCreateView(CreateView):
 
     def form_invalid(self, form):
         return redirect('webapp:cart_view')
+
+
+class OrderList(UserPassesTestMixin,ListView):
+    template_name = 'order/order_list.html'
+    context_object_name = 'orders'
+
+    def test_func(self):
+        return self.request.user.pk == self.kwargs.get('pk')
+    # вместо model = Cart
+    # для выполнения запроса в базу через модель
+    # вместо подсчёта total-ов в Python-е.
+    def get_queryset(self):
+        user = get_object_or_404(get_user_model(), pk=self.kwargs.get('pk'))
+        print(Order.objects.filter(user=user))
+        return Order.objects.filter(user=user)
+
+    #
+    # def get_context_data(self, *, object_list=None, **kwargs):
+    #     context = super().get_context_data(object_list=object_list, **kwargs)
+    #     context['order_total'] = Cart.get_cart_total(ids=self.get_cart_ids())
+    #     context['form'] = OrderForm()
+    #     return context

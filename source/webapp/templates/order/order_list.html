@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Корзина{% endblock %}
+{% block content %}
+    <table class="table">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Продукт</th>
+      <th scope="col">Количество</th>
+      <th scope="col">Цена</th>
+        <th scope="col">Количество</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for order in orders %}
+        {% for i in order.order_products.all %}
+{#            <p>{{ i.product.name }}</p><p>{{ i.qty }}</p><p>{{ i.total }}</p>#}
+            <tr>
+      <th scope="row">{{ forloop.counter }}</th>
+      <td>{{ i.product.name }}</td>
+      <td>{{ i.qty }}</td>
+      <td>{{ i.product.price }}</td>
+                <td>{{ i.total }}</td>
+    </tr>
+        {% endfor %}
+                    <tr>
+      <th scope="row"></th>
+      <td></td>
+      <td></td>
+      <td>Итого:</td>
+                <td>{{ order.get_order_total }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+    </table>
+{% endblock %}
