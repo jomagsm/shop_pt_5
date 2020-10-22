@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api_v1.serializer import ProductSerializer, OrderSerializer, OrderProductSerializer
-from webapp.models import Product, Order, OrderProduct
+from webapp.models import Product, Order, OrderProduct, Cart
 
 
 @ensure_csrf_cookie
@@ -78,10 +78,11 @@ class OrderView(APIView):
             slr = OrderSerializer(objects, many=True)
         return Response(slr.data)
 
-    def post(self,request):
+    def post(self, request):
         data = request.data
         order = Order.objects.create(name=data['name'],address=data['address'],phone=data['phone'])
-        for i in data['order_products']:
-            order_product = OrderProduct.objects.create(product_id=i['product']['id'], order_id=order.pk,
-                                                        qty=i['qty'])
+        cart_ids = self.request.session.get('cart_ids', [])
+        for i in cart_ids:
+            cart = get_object_or_404(Cart, pk=i)
+            order_product = OrderProduct.objects.create(product_id=cart.product_id, order_id= order.pk, qty=cart.qty)
         return Response({"message": "Заказ создан"}, status=204)
